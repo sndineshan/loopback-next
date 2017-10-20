@@ -4,8 +4,9 @@
 // License text available at https://opensource.org/licenses/MIT
 
 import {Reflector} from './reflect';
-import {BoundValue, ValueOrPromise} from './binding';
+import {Binding, BoundValue, ValueOrPromise} from './binding';
 import {Context} from './context';
+import {isPromise} from './is-promise';
 
 const PARAMETERS_KEY = 'inject:parameters';
 const PROPERTIES_KEY = 'inject:properties';
@@ -24,6 +25,7 @@ export interface Injection {
   bindingKey: string; // Binding key
   metadata?: {[attribute: string]: BoundValue}; // Related metadata
   resolve?: ResolverFunction; // A custom resolve function
+  binding?: Binding; // The optional binding for the target class
 }
 
 /**
@@ -151,6 +153,42 @@ export namespace inject {
   ) {
     return inject(bindingKey, metadata, resolveAsSetter);
   };
+
+  /**
+   * Inject an option from `options` of the parent binding. If no corresponding
+   * option value is present, `undefined` will be injected.
+   *
+   * @example
+   * ```ts
+   * class Store {
+   *   constructor(
+   *     @inject.options('x') public optionX: number,
+   *     @inject.options('y') public optionY: string,
+   *   ) { }
+   * }
+   *
+   * ctx.bind('store1').toClass(Store).withOptions({ x: 1, y: 'a' });
+   * ctx.bind('store2').toClass(Store).withOptions({ x: 2, y: 'b' });
+   *
+   *  const store1 = ctx.getSync('store1');
+   *  expect(store1.optionX).to.eql(1);
+   *  expect(store1.optionY).to.eql('a');
+
+   * const store2 = ctx.getSync('store2');
+   * expect(store2.optionX).to.eql(2);
+   * expect(store2.optionY).to.eql('b');
+   * ```
+   *
+   * @param bindingKey Optional property path of the option. If is `''` or not
+   * present, the `options` object will be returned.
+   * @param metadata Optional metadata to help the injection
+   */
+  export const options = function injectOptions(
+    bindingKey?: string,
+    metadata?: Object,
+  ) {
+    return inject(bindingKey || '', metadata, resolveAsOptions);
+  };
 }
 
 function resolveAsGetter(ctx: Context, injection: Injection) {
@@ -163,6 +201,27 @@ function resolveAsSetter(ctx: Context, injection: Injection) {
   return function setter(value: BoundValue) {
     ctx.bind(injection.bindingKey).to(value);
   };
+}
+
+function resolveAsOptions(ctx: Context, injection: Injection) {
+  if (!injection.binding) {
+    // The injection does not happen within a binding. For example,
+    // instantiateClass(cls, ctx) is used.
+    return undefined;
+  }
+
+  let path = injection.bindingKey;
+  if (path.startsWith('#')) {
+    // Remove leading `#`
+    path = path.substring(1);
+  }
+  path = path.replace(/#/g, '.');
+
+  let boundValue = injection.binding.options;
+  if (isPromise(boundValue)) {
+    return boundValue.then(v => Binding.getDeepProperty(v, path));
+  }
+  return Binding.getDeepProperty(boundValue, path);
 }
 
 /**

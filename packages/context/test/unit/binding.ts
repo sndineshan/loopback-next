@@ -54,6 +54,52 @@ describe('Binding', () => {
     });
   });
 
+  describe('withOptions', () => {
+    it('sets options for the binding', () => {
+      binding.withOptions({x: 1});
+      expect(binding.options).to.eql({x: 1});
+    });
+
+    it('clones options', () => {
+      const options = {x: 1};
+      binding.withOptions(options);
+      expect(binding.options).to.not.exactly(options);
+    });
+
+    it('merges options for the binding if called more than once', () => {
+      binding.withOptions({x: 1});
+      binding.withOptions({y: 2});
+      expect(binding.options).to.eql({x: 1, y: 2});
+    });
+
+    it('accepts a promise of options', async () => {
+      binding.withOptions(Promise.resolve({x: 1}));
+      const val = await binding.options;
+      expect(val).to.eql({x: 1});
+    });
+
+    it('merges an object and a promise of options', async () => {
+      binding.withOptions(Promise.resolve({x: 1}));
+      binding.withOptions({y: 'a'});
+      const val = await binding.options;
+      expect(val).to.eql({x: 1, y: 'a'});
+    });
+
+    it('merges a promise and an object of options', async () => {
+      binding.withOptions({y: 'a'});
+      binding.withOptions(Promise.resolve({x: 1}));
+      const val = await binding.options;
+      expect(val).to.eql({x: 1, y: 'a'});
+    });
+
+    it('merges a promise and another promise of options', async () => {
+      binding.withOptions(Promise.resolve({y: 'a'}));
+      binding.withOptions(Promise.resolve({x: 1}));
+      const val = await binding.options;
+      expect(val).to.eql({x: 1, y: 'a'});
+    });
+  });
+
   describe('inScope', () => {
     it('defaults the transient binding scope', () => {
       expect(binding.scope).to.equal(BindingScope.TRANSIENT);

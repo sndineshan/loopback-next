@@ -231,10 +231,10 @@ export class Context {
     }
 
     if (isPromise(boundValue)) {
-      return boundValue.then(v => getDeepProperty(v, path));
+      return boundValue.then(v => Binding.getDeepProperty(v, path));
     }
 
-    return getDeepProperty(boundValue, path);
+    return Binding.getDeepProperty(boundValue, path);
   }
 
   /**
@@ -247,20 +247,4 @@ export class Context {
     }
     return json;
   }
-}
-
-/**
- * Get nested properties by path
- * @param value Value of an object
- * @param path Path to the property
- */
-function getDeepProperty(value: BoundValue, path: string) {
-  const props = path.split('.');
-  for (const p of props) {
-    value = value[p];
-    if (value === undefined || value === null) {
-      return value;
-    }
-  }
-  return value;
 }
