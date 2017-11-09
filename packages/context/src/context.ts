@@ -10,7 +10,7 @@ import {isPromise} from './is-promise';
  * Context provides an implementation of Inversion of Control (IoC) container
  */
 export class Context {
-  private registry: Map<string, Binding>;
+  protected registry: Map<string, Binding>;
 
   /**
    * Create a new context
