@@ -1,0 +1,49 @@
+{
+  "name": "@loopback/repository-rest",
+  "version": "4.0.0-alpha.1",
+  "description": "Repository REST APIs for LoopBack",
+  "engines": {
+    "node": ">=6"
+  },
+  "main": "index",
+  "scripts": {
+    "acceptance": "lb-dist mocha --opts ../../test/mocha.opts 'DIST/test/acceptance/**/*.js'",
+    "build": "npm run build:dist && npm run build:dist6",
+    "build:current": "lb-tsc",
+    "build:dist": "lb-tsc es2017",
+    "build:dist6": "lb-tsc es2015",
+    "build:apidocs": "lb-apidocs",
+    "clean": "rm -rf loopback-context*.tgz dist* package",
+    "prepare": "npm run build && npm run build:apidocs",
+    "pretest": "npm run build:current",
+    "test": "lb-dist mocha --opts ../../test/mocha.opts 'DIST/test/unit/**/*.js' 'DIST/test/acceptance/**/*.js' 'DIST/test/integration/**/*.js'",
+    "integration": "lb-dist mocha --opts ../../test/mocha.opts 'DIST/test/integration/**/*.js'",
+    "unit": "lb-dist mocha --opts ../../test/mocha.opts 'DIST/test/unit/**/*.js'",
+    "verify": "npm pack && tar xf loopback-juggler*.tgz && tree package && npm run clean"
+  },
+  "author": "IBM",
+  "license": "MIT",
+  "devDependencies": {
+    "@loopback/build": "^4.0.0-alpha.5",
+    "@loopback/testlab": "^4.0.0-alpha.14"
+  },
+  "dependencies": {
+    "@loopback/context": "^4.0.0-alpha.20",
+    "@loopback/core": "^4.0.0-alpha.22",
+    "@loopback/repository": "^4.0.0-alpha.16",
+    "@loopback/rest": "^4.0.0-alpha.9"
+  },
+  "files": [
+    "README.md",
+    "index.js",
+    "index.d.ts",
+    "dist/src",
+    "dist6/src",
+    "api-docs",
+    "src"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/strongloop/loopback-next.git"
+  }
+}
